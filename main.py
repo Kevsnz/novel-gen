@@ -18,8 +18,8 @@ FILE_TEST = os.path.join(FILE_PATH, 'test.txt')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 SEQ_LEN = 256
-HEADS = 8
-EMBED = HEADS * 8
+HEADS = 10
+EMBED = HEADS * 6
 ENC_DEC_LAYERS = 12
 N_HID = 1024
 DROPOUT = 0.1
