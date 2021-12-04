@@ -32,7 +32,8 @@ EPOCH_BATCHES = int((TOKEN_COUNT / (SEQ_LEN * BATCH_SIZE * 2)) // 100 * 100)
 EVAL_BATCHES = 32
 EPOCH_LIMIT = 40
 LR = 0.0005
-LR_DECAY = 0.944
+LR_TGT = 0.00005
+LR_DECAY = math.pow(LR_TGT / LR, 1/EPOCH_LIMIT) #0.944
 REP_INTERVAL = int(max(1, (EPOCH_BATCHES / 20) // 100) * 100)
 rng: np.random.Generator = np.random.default_rng()
 
