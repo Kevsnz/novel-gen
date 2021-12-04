@@ -97,6 +97,7 @@ def train_epoch(
     int_loss = 0
     total_loss = 0
 
+    start = tm.perf_counter()
     for i, (scr_batch, tgt_batch) in enumerate(zip(scr_data, tgt_data)):
         pred: torch.Tensor = model(scr_batch)
         pred = pred.view(-1, vocab)
@@ -111,11 +112,13 @@ def train_epoch(
         int_loss += loss.item()
         if (i + 1) % REP_INTERVAL == 0:
             lr = scheduler.get_last_lr()[0]
+            dt = (tm.perf_counter() - start)/REP_INTERVAL
             print(
-                f'    Batch {i+1:5}/{len(scr_data):5}, lr={lr:9.06f}: loss {int_loss/REP_INTERVAL:8.05f}'
+                f'    Batch {i+1:5}/{len(scr_data):5}, lr={lr:9.06f}: loss {int_loss/REP_INTERVAL:8.05f}, dt {dt:6.2f}s/batch'
             )
             total_loss += int_loss
             int_loss = 0
+            start = tm.perf_counter()
 
     return total_loss / len(scr_data)
 
