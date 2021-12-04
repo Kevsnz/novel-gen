@@ -1,0 +1,6 @@
+__*
+models/
+mtdata*/
+.env/
+*.lnk
+*.txt
