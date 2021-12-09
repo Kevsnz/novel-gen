@@ -11,7 +11,7 @@ from model import Transformer
 
 
 # FILE_PATH = os.path.join('.', 'mydata_words')
-FILE_PATH = os.path.join('.','mydata')
+FILE_PATH = os.path.join('.', 'data', 'mydata')
 FILE_TRAIN = os.path.join(FILE_PATH, 'train.txt')
 FILE_VALID = os.path.join(FILE_PATH, 'valid.txt')
 FILE_TEST = os.path.join(FILE_PATH, 'test.txt')
@@ -101,7 +101,7 @@ def train_epoch(
     start = tm.perf_counter()
     for i, (scr_batch, tgt_batch) in enumerate(zip(scr_data, tgt_data)):
         pred: torch.Tensor = model(scr_batch)
-        pred = pred.view(-1, vocab)
+        pred = pred[:, -SEQ_LEN//2:,:].reshape(-1, vocab)
 
         optimizer.zero_grad()
 
@@ -157,7 +157,7 @@ def train(
             epoch_data, epoch_targets = get_train_sample(
                 train_data, SEQ_LEN, EPOCH_BATCHES
             )
-            epoch_targets = epoch_targets.view(epoch_targets.size(0), -1)
+            epoch_targets = epoch_targets[:, :, -SEQ_LEN//2:].reshape(epoch_targets.size(0), -1)
 
             loss = train_epoch(
                 model, optimizer, scheduler, epoch_data, epoch_targets, ds.dict_size()
