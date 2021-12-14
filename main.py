@@ -74,9 +74,11 @@ def create_model(src_vocab, trg_vocab):
         nhid=N_HID,
         dropout=DROPOUT,
     )
-    for p in model.parameters():
-        if p.dim() > 1:
-            nn.init.xavier_uniform_(p)
+    # for p in model.parameters():
+    #     if p.dim() > 1:
+    #         #nn.init.xavier_uniform_(p)
+    #         nn.init.kaiming_normal_(p)
+    print('New model created')
     return model.to(device)
 
 
