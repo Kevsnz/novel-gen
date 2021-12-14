@@ -149,7 +149,11 @@ def evaluate(model: nn.Module, eval_data: torch.Tensor, vocab: int):
 
 
 def train(
-    model: nn.Module, train_data: torch.Tensor, eval_data: torch.Tensor, ds: Dataset
+    model: nn.Module,
+    train_data: torch.Tensor,
+    eval_data: torch.Tensor,
+    ds: Dataset,
+    gen_routine: callable,
 ):
     dt = datetime.datetime.now()
     dir = os.path.join('models', f'run_{dt:%Y-%m-%d_%H-%M-%S}')
