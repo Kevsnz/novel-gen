@@ -200,7 +200,12 @@ class Encoder(nn.Module):
             # [EncoderLayer(d_embed, heads, nhid) for _ in range(N)]
             [
                 trans.TransformerEncoderLayer(
-                    d_model=d_embed, nhead=heads, dim_feedforward=nhid, dropout=dropout
+                    d_model=d_embed,
+                    nhead=heads,
+                    dim_feedforward=nhid,
+                    dropout=dropout,
+                    activation=F.gelu,
+                    batch_first=True
                 )
                 for _ in range(N)
             ]
@@ -208,10 +213,10 @@ class Encoder(nn.Module):
         self.norm = nn.LayerNorm(d_embed)
 
     def forward(self, src: torch.Tensor, mask):
-        x = src.transpose(0, 1)
+        x = src
         for i in range(self.N):
             x = self.layers[i](x, mask)
-        return self.norm(x.transpose(0, 1))
+        return self.norm(x)
 
 
 class Decoder(nn.Module):
@@ -222,7 +227,7 @@ class Decoder(nn.Module):
             # [DecoderLayer(d_model, heads, nhid) for _ in range(N)]
             [
                 trans.TransformerDecoderLayer(
-                    d_model=d_embed, nhead=heads, dim_feedforward=nhid, dropout=dropout
+                    d_model=d_embed, nhead=heads, dim_feedforward=nhid, dropout=dropout, batch_first=True
                 )
                 for _ in range(N)
             ]
@@ -230,10 +235,10 @@ class Decoder(nn.Module):
         self.norm = nn.LayerNorm(d_embed)
 
     def forward(self, trg: torch.Tensor, e_outputs, src_mask, trg_mask):
-        x = trg.transpose(0, 1)
+        x = trg
         for i in range(self.N):
             x = self.layers[i](x, e_outputs, src_mask, trg_mask)
-        return self.norm(x.transpose(0, 1))
+        return self.norm(x)
 
 
 class Transformer(nn.Module):
@@ -241,7 +246,15 @@ class Transformer(nn.Module):
         super().__init__()
         self.embed_src = nn.Embedding(src_vocab, d_embed)
         self.pe_src = PositionalEncoding(d_embed)
-        self.encoder = Encoder(d_embed, N, heads, nhid, dropout)
+        # self.encoder = Encoder(d_embed, N, heads, nhid, dropout)
+
+        self.encoder = trans.TransformerEncoder(
+            trans.TransformerEncoderLayer(
+                d_embed, heads, nhid, dropout, activation=F.gelu, batch_first=True
+            ),
+            N,
+            norm=nn.LayerNorm(d_embed),
+        )
 
         # self.embed_tgt = nn.Embedding(trg_vocab, d_embed)
         # self.pe_tgt = PositionalEncoding(d_embed)
@@ -250,13 +263,9 @@ class Transformer(nn.Module):
         self.out = nn.Linear(d_embed, trg_vocab)
         self.mask = None
 
-    # def _gen_mask(self, size):
-    #     return torch.triu(torch.full((size, size), float('-inf')), diagonal=1)
-
     def forward(self, src: torch.Tensor, mask: bool = True):
         if mask:
             if self.mask is None or self.mask.size(1) != src.size(1):
-                # self.mask = self._gen_mask(src.size(1)).to(src.device)
                 self.mask = trans.Transformer.generate_square_subsequent_mask(
                     src.size(1)
                 ).to(src.device)
