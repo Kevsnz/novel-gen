@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from data import Dataset, DatasetWord
+from data import Dataset, DatasetWord, DatasetWordPart
 from model import Transformer
 
 
@@ -15,6 +15,7 @@ FILE_PATH = os.path.join('.', 'data', 'mydata')
 FILE_TRAIN = os.path.join(FILE_PATH, 'train.txt')
 FILE_VALID = os.path.join(FILE_PATH, 'valid.txt')
 FILE_TEST = os.path.join(FILE_PATH, 'test.txt')
+FILE_DICT = os.path.join(FILE_PATH, 'dictionary_500.txt')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 SEQ_LEN = 256
@@ -23,10 +24,11 @@ EMBED = HEADS * 6
 ENC_DEC_LAYERS = 12
 N_HID = 1024
 DROPOUT = 0.1
-SEQ_SHIFT = 1  # max(1,int(SEQ_LEN // 10))
+# SEQ_SHIFT = 1  # max(1,int(SEQ_LEN // 10))
 
-#TOKEN_COUNT = 2971897  # words
-TOKEN_COUNT =  24000000 # characters
+# TOKEN_COUNT = 2971897  # words
+# TOKEN_COUNT = 14000000  # characters
+TOKEN_COUNT = 7000000  # word parts
 BATCH_SIZE = 32
 EPOCH_BATCHES = int((TOKEN_COUNT / (SEQ_LEN * BATCH_SIZE * 2)) // 100 * 100)
 EVAL_BATCHES = 32
@@ -101,7 +103,8 @@ def train_epoch(
     start = tm.perf_counter()
     for i, (scr_batch, tgt_batch) in enumerate(zip(scr_data, tgt_data)):
         pred: torch.Tensor = model(scr_batch)
-        pred = pred[:, -SEQ_LEN//2:,:].reshape(-1, vocab)
+        #pred = pred[:, -SEQ_LEN // 2 :, :]
+        pred = pred.reshape(-1, vocab)
 
         optimizer.zero_grad()
 
@@ -146,18 +149,25 @@ def train(
     dir = os.path.join('models', f'run_{dt:%Y-%m-%d_%H-%M-%S}')
     os.mkdir(dir)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=LR, betas=(0.9, 0.98), eps=1e-9)
+    optimizer = torch.optim.AdamW(
+        model.parameters(), lr=LR, betas=(0.9, 0.99), eps=1e-9
+    )
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=LR_DECAY)
     epoch = 0
 
     try:
+        print(f'Starting training. Epoch limit: {EPOCH_LIMIT}, batch count: {EPOCH_BATCHES}')
         for epoch in range(EPOCH_LIMIT):
             st_time = tm.monotonic()
 
             epoch_data, epoch_targets = get_train_sample(
                 train_data, SEQ_LEN, EPOCH_BATCHES
             )
-            epoch_targets = epoch_targets[:, :, -SEQ_LEN//2:].reshape(epoch_targets.size(0), -1)
+
+            #epoch_targets = epoch_targets[:, :, -SEQ_LEN // 2 :]
+            epoch_targets = epoch_targets.reshape(
+                epoch_targets.size(0), -1
+            )
 
             loss = train_epoch(
                 model, optimizer, scheduler, epoch_data, epoch_targets, ds.dict_size()
@@ -172,7 +182,7 @@ def train(
             )
 
             save_model(model, epoch, dir)
-            gen_text = generate_char(model, 1000, ds)
+            gen_text = gen_routine(model, 1000, ds)
             with open(os.path.join(dir, f'get_{epoch}.txt'), 'w') as f:
                 f.write(gen_text)
             print('Generated 1000 symbol text')
@@ -217,6 +227,24 @@ def generate_words(
     return out_str
 
 
+def generate_wordpart(model, amount: int, ds: Dataset, primer: str = 'Привет, '):
+    temp = 0.5
+    model.eval()
+
+    in_str = primer
+    input_data = ds.tokenize(in_str)
+    add_len = 0
+    while len(input_data) < SEQ_LEN:
+        in_str = ' ' + in_str
+        input_data = ds.tokenize(in_str)
+        add_len += 1
+
+    out_data = generate_tokens(model, amount, input_data, temp)
+
+    out_str = ds.detokenize(out_data)
+    return out_str[add_len:]
+
+
 def generate_tokens(model, amount: int, input_data: np.ndarray, temp: float):
     out_data = torch.tensor(input_data)
     input_data = torch.tensor(input_data, dtype=torch.long).unsqueeze(0).to(device)
@@ -237,23 +265,36 @@ def generate_tokens(model, amount: int, input_data: np.ndarray, temp: float):
     return out_data.int().numpy()
 
 
-def train_new_model(ds: Dataset):
+def train_new_model(ds: Dataset, gen_routine: callable):
     vocab = ds.dict_size()
     train_batches = split_to_batches(ds.trainset, BATCH_SIZE)
     val_batches = split_to_batches(ds.validset, BATCH_SIZE)
     test_batches = split_to_batches(ds.testset, BATCH_SIZE)
 
     model = create_model(vocab, vocab)
-    # model = load_model('models\\run_2021-12-03_22-36-21\\model_10.pt')
-    train(model, train_batches, val_batches, ds)
+    # model = load_model('models\\run_2021-12-09_21-24-56\\model_40.pt')
+    train(model, train_batches, val_batches, ds, gen_routine)
     # print(generate_char(model, 1000, ds))
+
+
+def main_wordpart():
+    ds = DatasetWordPart(FILE_DICT)
+    ds.load_data(FILE_TRAIN, FILE_VALID, FILE_TEST)
+
+    train_new_model(ds, generate_wordpart)
+
+    # model = load_model('models\\run_2021-12-10_20-37-01\\model_40.pt')
+    # gibberish = generate_wordpart(model, 20000, ds, 'Зима стояла снежная. Он ехал на машине через лес по заснеженной дороге. В машине было тепло, заряд держался на удивление хорошо. С такой эффективностью можно будет добраться не меньше чем до ближайшего большого города. Там будет и подзарядка, и ночлег, и потрясающий ужин.')
+    # # print(f'{gibberish}')
+    # with open(f'gennnnn.txt', 'w') as f:
+    #     f.write(gibberish)
 
 
 def main_char():
     ds = Dataset()
     ds.load_data(FILE_TRAIN, FILE_VALID, FILE_TEST)
 
-    train_new_model(ds)
+    train_new_model(ds, generate_char)
 
     # model = load_model('models\\run_2021-11-30_18-15-21\\model_25.pt')
     # gibberish = generate(model, 20000, ds, 'Зима стояла снежная. Он ехал на машине через лес по заснеженной дороге. В машине было тепло, заряд держался на удивление хорошо. С такой эффективностью можно будет добраться не меньше чем до ближайшего большого города. Там будет и подзарядка, и ночлег, и потрясающий ужин.')
@@ -268,7 +309,7 @@ def main_word():
 
     # ds.clear_data()
 
-    train_new_model(ds)
+    train_new_model(ds, generate_words)
 
 
 def test():
@@ -306,5 +347,6 @@ def test():
 
 if __name__ == '__main__':
     print('Welcome!')
-    main_char()
+    main_wordpart()
+    #test2()
     print('Done!')
