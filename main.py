@@ -30,12 +30,12 @@ DROPOUT = 0.1
 # TOKEN_COUNT = 14000000  # characters
 TOKEN_COUNT = 7000000  # word parts
 BATCH_SIZE = 32
-EPOCH_BATCHES = int((TOKEN_COUNT / (SEQ_LEN * BATCH_SIZE * 2)) // 100 * 100)
+EPOCH_BATCHES = int((TOKEN_COUNT / (SEQ_LEN * BATCH_SIZE * 1)) // 100 * 100)
 EVAL_BATCHES = 32
 EPOCH_LIMIT = 40
 LR = 0.0005
 LR_TGT = 0.00005
-LR_DECAY = math.pow(LR_TGT / LR, 1/EPOCH_LIMIT) #0.944
+LR_DECAY = math.pow(LR_TGT / LR, 1 / EPOCH_LIMIT)  # 0.944
 REP_INTERVAL = int(max(1, (EPOCH_BATCHES / 20) // 100) * 100)
 rng: np.random.Generator = np.random.default_rng()
 
@@ -66,7 +66,13 @@ def get_train_sample(
 
 def create_model(src_vocab, trg_vocab):
     model = Transformer(
-        src_vocab, trg_vocab, d_embed=EMBED, N=ENC_DEC_LAYERS, heads=HEADS, nhid=N_HID, dropout=DROPOUT
+        src_vocab,
+        trg_vocab,
+        d_embed=EMBED,
+        N=ENC_DEC_LAYERS,
+        heads=HEADS,
+        nhid=N_HID,
+        dropout=DROPOUT,
     )
     for p in model.parameters():
         if p.dim() > 1:
@@ -116,7 +122,7 @@ def train_epoch(
         int_loss += loss.item()
         if (i + 1) % REP_INTERVAL == 0:
             lr = scheduler.get_last_lr()[0]
-            dt = (tm.perf_counter() - start)/REP_INTERVAL
+            dt = (tm.perf_counter() - start) / REP_INTERVAL
             print(
                 f'    Batch {i+1:5}/{len(scr_data):5}, lr={lr:9.06f}: loss {int_loss/REP_INTERVAL:8.05f}, dt {dt:6.2f}s/batch'
             )
