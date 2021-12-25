@@ -201,7 +201,7 @@ def train(
     os.mkdir(dir)
 
     optimizer = torch.optim.AdamW(
-        model.parameters(), lr=LR, betas=(0.9, 0.99), eps=1e-9
+        model.parameters(), lr=LR, betas=(0.9, 0.98), eps=1e-9
     )
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=LR_DECAY)
     epoch = 0
@@ -230,7 +230,8 @@ def train(
                 f'Epoch {epoch:3} done: '
                 f'train loss {loss:8.05f}, '
                 f'eval loss {eval_loss:8.05f}, '
-                f'time {tm.monotonic()-st_time:5.1f}'
+                f'time {tm.monotonic()-st_time:5.1f}, '
+                f'lr: {scheduler.get_last_lr()[0]:9.06f}'
             )
 
             if SAVE_INTER_MODELS:
