@@ -146,7 +146,7 @@ def train_epoch(
     start = tm.perf_counter()
     for i, (scr_batch, tgt_batch) in enumerate(zip(scr_data, tgt_data)):
         pred: torch.Tensor = model(scr_batch)
-        #pred = pred[:, -SEQ_LEN // 2 :, :]
+        # pred = pred[:, -SEQ_LEN // 2 :, :]
         pred = pred.reshape(-1, vocab)
 
         optimizer.zero_grad()
@@ -172,13 +172,17 @@ def train_epoch(
 
 def evaluate(model: nn.Module, eval_data: torch.Tensor, vocab: int):
     model.eval()
-    eval_inputs, eval_targets = get_train_sample(eval_data, SEQ_LEN, EVAL_BATCHES)
+    eval_inputs, eval_targets = get_train_sample_rnd(eval_data, SEQ_LEN, EVAL_BATCHES)
+    #eval_targets = eval_targets[:, :, -SEQ_LEN // 2 :]
     eval_targets = eval_targets.reshape(eval_targets.size(0), -1)
 
     total_loss = 0.0
     with torch.no_grad():
         for input_batch, target_batch in zip(eval_inputs, eval_targets):
-            output = model(input_batch).view(-1, vocab)
+            output: torch.Tensor = model(input_batch)
+            # output = output[:, -SEQ_LEN // 2 :, :]
+            output = output.reshape(-1, vocab)
+
             loss = F.cross_entropy(output, target_batch)
             total_loss += loss.item()
 
@@ -214,10 +218,8 @@ def train(
                 train_data, SEQ_LEN, EPOCH_BATCHES
             )
 
-            #epoch_targets = epoch_targets[:, :, -SEQ_LEN // 2 :]
-            epoch_targets = epoch_targets.reshape(
-                epoch_targets.size(0), -1
-            )
+            # epoch_targets = epoch_targets[:, :, -SEQ_LEN // 2 :]
+            epoch_targets = epoch_targets.reshape(epoch_targets.size(0), -1)
 
             loss = train_epoch(
                 model, optimizer, scheduler, epoch_data, epoch_targets, ds.dict_size()
@@ -337,7 +339,7 @@ def train_new_model(ds: Dataset, gen_routine: callable):
 
 def main_wordpart():
     ds = DatasetWordPart(FILE_DICT)
-    ds.load_data(FILE_TRAIN, FILE_VALID, FILE_TEST)
+    ds.load_data(FILE_TRAIN, FILE_EVAL, FILE_TEST)
     recalc_batch_params(ds)
 
     train_new_model(ds, generate_wordpart)
