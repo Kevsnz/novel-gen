@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.modules.transformer as trans
 import torch.nn.functional as F
+import torch.nn.modules.normalization as norm
 
 # from torch.nn import MultiheadAttention as fdafdafd
 
@@ -205,12 +206,13 @@ class Encoder(nn.Module):
                     dim_feedforward=nhid,
                     dropout=dropout,
                     activation=F.gelu,
-                    batch_first=True
+                    batch_first=True,
+                    norm_first=True,
                 )
                 for _ in range(N)
             ]
         )
-        self.norm = nn.LayerNorm(d_embed)
+        self.norm = norm.LayerNorm(d_embed)
 
     def forward(self, src: torch.Tensor, mask):
         x = src
@@ -227,12 +229,17 @@ class Decoder(nn.Module):
             # [DecoderLayer(d_model, heads, nhid) for _ in range(N)]
             [
                 trans.TransformerDecoderLayer(
-                    d_model=d_embed, nhead=heads, dim_feedforward=nhid, dropout=dropout, batch_first=True
+                    d_model=d_embed,
+                    nhead=heads,
+                    dim_feedforward=nhid,
+                    dropout=dropout,
+                    batch_first=True,
+                    norm_first=True,
                 )
                 for _ in range(N)
             ]
         )
-        self.norm = nn.LayerNorm(d_embed)
+        self.norm = norm.LayerNorm(d_embed)
 
     def forward(self, trg: torch.Tensor, e_outputs, src_mask, trg_mask):
         x = trg
