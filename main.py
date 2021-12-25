@@ -30,18 +30,29 @@ N_HID = 1024
 DROPOUT = 0.1
 # SEQ_SHIFT = 1  # max(1,int(SEQ_LEN // 10))
 
-# TOKEN_COUNT = 2971897  # words
-# TOKEN_COUNT = 14000000  # characters
-TOKEN_COUNT = 7000000  # word parts
 BATCH_SIZE = 32
-EPOCH_BATCHES = int((TOKEN_COUNT / (SEQ_LEN * BATCH_SIZE * 1)) // 100 * 100)
 EVAL_BATCHES = 32
 EPOCH_LIMIT = 40
 LR = 0.0005
 LR_TGT = 0.00005
+EPOCH_BATCHES = 1
 LR_DECAY = math.pow(LR_TGT / LR, 1 / EPOCH_LIMIT)  # 0.944
-REP_INTERVAL = int(max(1, (EPOCH_BATCHES / 20) // 100) * 100)
+
+REP_COUNT = 5
+REP_INTERVAL = 5
 rng: np.random.Generator = np.random.default_rng()
+
+
+def recalc_batch_params(ds: DatasetWordPart):
+    global EPOCH_BATCHES, REP_INTERVAL
+    token_count = len(ds.trainset)
+    EPOCH_BATCHES = int((token_count / (SEQ_LEN * BATCH_SIZE)) // 100 * 100)
+    if EPOCH_BATCHES == 0:
+        EPOCH_BATCHES = int(token_count / (SEQ_LEN * BATCH_SIZE))
+
+    REP_INTERVAL = int((EPOCH_BATCHES / REP_COUNT) // 100 * 100)
+    if REP_INTERVAL == 0:
+        REP_INTERVAL = int(EPOCH_BATCHES / REP_COUNT)
 
 
 def split_to_batches(data: np.ndarray, bs) -> np.ndarray:
@@ -327,6 +338,7 @@ def train_new_model(ds: Dataset, gen_routine: callable):
 def main_wordpart():
     ds = DatasetWordPart(FILE_DICT)
     ds.load_data(FILE_TRAIN, FILE_VALID, FILE_TEST)
+    recalc_batch_params(ds)
 
     train_new_model(ds, generate_wordpart)
 
@@ -340,6 +352,7 @@ def main_wordpart():
 def main_char():
     ds = Dataset()
     ds.load_data(FILE_TRAIN, FILE_EVAL, FILE_TEST)
+    recalc_batch_params(ds)
 
     train_new_model(ds, generate_char)
 
@@ -353,6 +366,7 @@ def main_char():
 def main_word():
     ds = DatasetWord()
     ds.load_data(FILE_TRAIN, FILE_EVAL, FILE_TEST)
+    recalc_batch_params(ds)
 
     # ds.clear_data()
 
