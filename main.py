@@ -172,7 +172,10 @@ def train(
     epoch = 0
 
     try:
-        print(f'Starting training. Epoch limit: {EPOCH_LIMIT}, batch count: {EPOCH_BATCHES}')
+        print(
+            f'Starting training. Epoch limit: {EPOCH_LIMIT}, batch count: {EPOCH_BATCHES}'
+        )
+        start_training = tm.perf_counter()
         for epoch in range(EPOCH_LIMIT):
             st_time = tm.monotonic()
 
@@ -208,8 +211,13 @@ def train(
 
             scheduler.step()
             epoch += 1
+        print(f'Training done! Epochs: {epoch}, total time: {tm.perf_counter()-start_training: .01f}s')
+        gen_text = gen_routine(model, 1000, ds)
+        with open(os.path.join(dir, f'gen_{epoch}_final.txt'), 'w') as f:
+            f.write(gen_text)
+        print('Generated 1000 token text')
     except KeyboardInterrupt:
-        pass
+        print(f'Training interrupted! Epoch: {epoch}, total time: {tm.perf_counter()-start_training: .01f}s')
     finally:
         save_model(model, epoch, dir)
 
