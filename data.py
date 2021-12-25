@@ -179,6 +179,14 @@ class DatasetWordPart:
             f'Token count: train: {len(self.trainset)}, eval: {len(self.evalset)}, test: {len(self.testset)}'
         )
 
+    def crop_data(self, train_count: int, eval_count: int, test_count: int):
+        self.trainset = self.trainset[0:train_count]
+        self.evalset = self.evalset[0:eval_count]
+        self.testset = self.testset[0:test_count]
+        print(
+            f'Dataset cropped. Train len: {len(self.trainset)}, eval len: {len(self.evalset)}, test len: {len(self.testset)}'
+        )
+
     def _get_ss_index(self, ss: str):
         while len(ss) > 0:
             w_idx = self._txt2num.get(ss)
