@@ -311,18 +311,41 @@ def generate_tokens(model, amount: int, input_data: np.ndarray, temp: float):
 
     with torch.no_grad():
         for _ in range(max(1, amount)):
-            output_data = model(input_data, mask=False).squeeze(0)
-            # next_tokens = torch.argmax(output_data[-1], -1, keepdim=True)
-            weights = F.softmax(output_data[-1], -1)
-            weights = weights.log().div(temp).exp()
-            next_tokens = torch.multinomial(weights, 1).long()
-            if len(next_tokens.shape) > 1:
-                next_tokens = next_tokens.squeeze(0)
+            output_data = model(input_data, mask=False)
+            output_data = output_data.squeeze(0)[-1]  # take last token
+
+            # next_tokens = select_tokens_greedy(output_data)
+            # next_tokens = select_tokens_temp(output_data, temp)
+            next_tokens = select_tokens_topX_rnd(output_data, 500, temp)
+
             out_data = torch.cat([out_data, next_tokens.cpu()], 0)
             input_data = torch.cat([input_data, next_tokens.unsqueeze(0)], 1)
             input_data = input_data[:, -SEQ_LEN:]
 
     return out_data.int().numpy()
+
+
+def select_tokens_topX_rnd(
+    output_data: torch.Tensor, n: int = 2, temp: float = 1.0
+) -> torch.Tensor:
+    k = output_data.shape[0] - n
+    weights = F.softmax(output_data, -1)
+    weights = weights.log().div(temp).exp()
+    _, indices = torch.topk(-weights, k, dim=0)
+    weights[indices] = 0
+    idx = torch.multinomial(weights, 1).long()
+    return idx
+
+
+def select_tokens_temp(output_data: torch.Tensor, temp: float) -> torch.Tensor:
+    weights = F.softmax(output_data, -1)
+    weights = weights.log().div(temp).exp()
+    next_tokens = torch.multinomial(weights, 1).long()
+    return next_tokens
+
+
+def select_tokens_greedy(output_data: torch.Tensor) -> torch.Tensor:
+    return torch.argmax(output_data, -1, keepdim=True)
 
 
 def train_new_model(ds: Dataset, gen_routine: callable):
