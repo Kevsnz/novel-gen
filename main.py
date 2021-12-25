@@ -337,6 +337,19 @@ def train_new_model(ds: Dataset, gen_routine: callable):
     # print(generate_char(model, 1000, ds))
 
 
+def infer_model(ds: Dataset, model_path: str, gen_routine: callable):
+    model = load_model(model_path)
+    gibberish = gen_routine(
+        model=model,
+        amount=2000,
+        ds=ds,
+        primer='Зима стояла снежная. Он ехал на машине через лес по заснеженной дороге. В машине было тепло, заряд держался на удивление хорошо. С такой эффективностью можно будет добраться не меньше чем до ближайшего большого города. Там будет и подзарядка, и ночлег, и потрясающий ужин.',
+    )
+    # print(f'{gibberish}')
+    with open(f'gennnnn.txt', 'w') as f:
+        f.write(gibberish)
+
+
 def main_wordpart():
     ds = DatasetWordPart(FILE_DICT)
     ds.load_data(FILE_TRAIN, FILE_EVAL, FILE_TEST)
@@ -344,11 +357,8 @@ def main_wordpart():
 
     train_new_model(ds, generate_wordpart)
 
-    # model = load_model('models\\run_2021-12-10_20-37-01\\model_40.pt')
-    # gibberish = generate_wordpart(model, 20000, ds, 'Зима стояла снежная. Он ехал на машине через лес по заснеженной дороге. В машине было тепло, заряд держался на удивление хорошо. С такой эффективностью можно будет добраться не меньше чем до ближайшего большого города. Там будет и подзарядка, и ночлег, и потрясающий ужин.')
-    # # print(f'{gibberish}')
-    # with open(f'gennnnn.txt', 'w') as f:
-    #     f.write(gibberish)
+    # file = 'models\\run_2021-12-18_08-22-15\\model_40.pt'
+    # infer_model(ds, file, generate_wordpart)
 
 
 def main_char():
