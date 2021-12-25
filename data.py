@@ -5,7 +5,7 @@ import numpy as np
 class Dataset:
     def __init__(self) -> None:
         self.trainset: np.ndarray = None
-        self.validset: np.ndarray = None
+        self.evalset: np.ndarray = None
         self.testset: np.ndarray = None
         self.char2num = {}
         self.num2char = []
@@ -18,7 +18,7 @@ class Dataset:
             self.trainset = self.tokenize(fp.read())
 
         with open(valid_fail, 'r', encoding='utf8') as fp:
-            self.validset = self.tokenize(fp.read())
+            self.evalset = self.tokenize(fp.read())
 
         with open(test_file, 'r', encoding='utf8') as fp:
             self.testset = self.tokenize(fp.read())
@@ -125,7 +125,7 @@ class DatasetWord:
 
 class DatasetWordPart:
     trainset: np.ndarray
-    validset: np.ndarray
+    evalset: np.ndarray
     testset: np.ndarray
 
     _txt2num: dict[str, int]
@@ -133,7 +133,7 @@ class DatasetWordPart:
 
     def __init__(self, dict_file: str = None):
         self.trainset: np.ndarray = None
-        self.validset: np.ndarray = None
+        self.evalset: np.ndarray = None
         self.testset: np.ndarray = None
 
         self._txt2num = {}
@@ -163,19 +163,21 @@ class DatasetWordPart:
         self._num2txt.append(c)
         self._txt2num[c] = idx
 
-    def load_data(self, train_file: str, valid_fail: str, test_file: str):
+    def load_data(self, train_file: str, eval_file: str, test_file: str):
         print('Loading and tokenizing data...')
         with open(train_file, 'r', encoding='utf8') as fp:
             self.trainset = self.tokenize(fp.read())
 
-        with open(valid_fail, 'r', encoding='utf8') as fp:
-            self.validset = self.tokenize(fp.read())
+        with open(eval_file, 'r', encoding='utf8') as fp:
+            self.evalset = self.tokenize(fp.read())
 
         with open(test_file, 'r', encoding='utf8') as fp:
             self.testset = self.tokenize(fp.read())
 
         print('Data loaded!')
-        print(f'Token count: train: {len(self.trainset)}, eval: {len(self.validset)}, test: {len(self.testset)}')
+        print(
+            f'Token count: train: {len(self.trainset)}, eval: {len(self.evalset)}, test: {len(self.testset)}'
+        )
 
     def _get_ss_index(self, ss: str):
         while len(ss) > 0:
