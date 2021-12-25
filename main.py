@@ -18,6 +18,10 @@ FILE_TEST = os.path.join(FILE_PATH, 'test.txt')
 FILE_DICT = os.path.join(FILE_PATH, 'dictionary_500.txt')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+SAVE_INTER_MODELS = False
+GEN_INTER_TEXTS = False
+REP_INTER = False
+
 SEQ_LEN = 256
 HEADS = 10
 EMBED = HEADS * 6
@@ -122,8 +126,8 @@ def train_epoch(
         optimizer.step()
 
         int_loss += loss.item()
-        if (i + 1) % REP_INTERVAL == 0:
         total_loss += loss.item()
+        if REP_INTER and (i + 1) % REP_INTERVAL == 0:
             lr = scheduler.get_last_lr()[0]
             dt = (tm.perf_counter() - start) / REP_INTERVAL
             print(
@@ -193,11 +197,14 @@ def train(
                 f'time {tm.monotonic()-st_time:5.1f}'
             )
 
-            save_model(model, epoch, dir)
-            gen_text = gen_routine(model, 1000, ds)
-            with open(os.path.join(dir, f'get_{epoch}.txt'), 'w') as f:
-                f.write(gen_text)
-            print('Generated 1000 symbol text')
+            if SAVE_INTER_MODELS:
+                save_model(model, epoch, dir)
+
+            if GEN_INTER_TEXTS:
+                gen_text = gen_routine(model, 1000, ds)
+                with open(os.path.join(dir, f'gen_{epoch}.txt'), 'w') as f:
+                    f.write(gen_text)
+                print('Generated 1000 symbol text')
 
             scheduler.step()
             epoch += 1
