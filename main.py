@@ -123,12 +123,12 @@ def train_epoch(
 
         int_loss += loss.item()
         if (i + 1) % REP_INTERVAL == 0:
+        total_loss += loss.item()
             lr = scheduler.get_last_lr()[0]
             dt = (tm.perf_counter() - start) / REP_INTERVAL
             print(
                 f'    Batch {i+1:5}/{len(scr_data):5}, lr={lr:9.06f}: loss {int_loss/REP_INTERVAL:8.05f}, dt {dt:6.2f}s/batch'
             )
-            total_loss += int_loss
             int_loss = 0
             start = tm.perf_counter()
 
