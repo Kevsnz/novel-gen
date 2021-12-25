@@ -13,7 +13,7 @@ from model import Transformer
 # FILE_PATH = os.path.join('.', 'mydata_words')
 FILE_PATH = os.path.join('.', 'data', 'mydata')
 FILE_TRAIN = os.path.join(FILE_PATH, 'train.txt')
-FILE_VALID = os.path.join(FILE_PATH, 'valid.txt')
+FILE_EVAL = os.path.join(FILE_PATH, 'valid.txt')
 FILE_TEST = os.path.join(FILE_PATH, 'test.txt')
 FILE_DICT = os.path.join(FILE_PATH, 'dictionary_500.txt')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -319,7 +319,7 @@ def main_wordpart():
 
 def main_char():
     ds = Dataset()
-    ds.load_data(FILE_TRAIN, FILE_VALID, FILE_TEST)
+    ds.load_data(FILE_TRAIN, FILE_EVAL, FILE_TEST)
 
     train_new_model(ds, generate_char)
 
@@ -332,7 +332,7 @@ def main_char():
 
 def main_word():
     ds = DatasetWord()
-    ds.load_data(FILE_TRAIN, FILE_VALID, FILE_TEST)
+    ds.load_data(FILE_TRAIN, FILE_EVAL, FILE_TEST)
 
     # ds.clear_data()
 
