@@ -51,7 +51,27 @@ def split_to_batches(data: np.ndarray, bs) -> np.ndarray:
     return data
 
 
-def get_train_sample(
+def get_train_sample_seq(
+    batches: np.ndarray, seq_len: int, count: int
+) -> tuple[torch.Tensor, torch.Tensor]:
+    idx_array = np.array(list(range(count)), dtype=int) * seq_len
+    idx_array_seq = np.linspace(
+        idx_array, idx_array + seq_len - 1, seq_len, dtype=int, axis=-1
+    )
+
+    # for idx_arr in idx_array_seq:
+    #     for i1, i2 in zip(idx_arr[:-1], idx_arr[1:]):
+    #         assert i2 == i1+1
+
+    data: np.ndarray = np.take(batches, idx_array_seq, axis=1)
+    target: np.ndarray = np.take(batches, idx_array_seq + 1, axis=1)
+
+    data = torch.tensor(data).transpose(1, 0).contiguous()
+    target = torch.tensor(target, dtype=torch.long).transpose(1, 0).contiguous()
+    return data.to(device), target.to(device)
+
+
+def get_train_sample_rnd(
     batches: np.ndarray, seq_len: int, count: int
 ) -> tuple[torch.Tensor, torch.Tensor]:
     idx_start_range = batches.shape[1] - seq_len - 2
@@ -179,7 +199,7 @@ def train(
         for epoch in range(EPOCH_LIMIT):
             st_time = tm.monotonic()
 
-            epoch_data, epoch_targets = get_train_sample(
+            epoch_data, epoch_targets = get_train_sample_seq(
                 train_data, SEQ_LEN, EPOCH_BATCHES
             )
 
@@ -295,7 +315,7 @@ def generate_tokens(model, amount: int, input_data: np.ndarray, temp: float):
 def train_new_model(ds: Dataset, gen_routine: callable):
     vocab = ds.dict_size()
     train_batches = split_to_batches(ds.trainset, BATCH_SIZE)
-    val_batches = split_to_batches(ds.validset, BATCH_SIZE)
+    val_batches = split_to_batches(ds.evalset, BATCH_SIZE)
     test_batches = split_to_batches(ds.testset, BATCH_SIZE)
 
     model = create_model(vocab, vocab)
@@ -348,7 +368,7 @@ def test():
     data = np.arange(vocab_size)
     btchs = split_to_batches(data, bs=batch_size)  # sequences per batch
 
-    src, tgt = get_train_sample(
+    src, tgt = get_train_sample_rnd(
         btchs, seq_len=seq_len, count=2
     )  # sequence length, number of batches
     tgt = tgt.reshape(tgt.size(0), -1)
