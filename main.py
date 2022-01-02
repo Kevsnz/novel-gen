@@ -358,7 +358,8 @@ def train_new_model(ds: Dataset, gen_routine: callable):
     test_batches = split_to_batches(ds.testset, BATCH_SIZE)
 
     model = create_model(vocab, vocab)
-    # model = load_model('models\\run_2021-12-09_21-24-56\\model_40.pt')
+    # model = load_model('models\\bpe\\run_2022-01-02_12-05-30\\model_200.pt')
+
     train(model, train_batches, val_batches, ds, gen_routine)
     # print(generate_char(model, 1000, ds))
 
@@ -395,6 +396,11 @@ def main_bpe():
 def main_wordpart():
     ds = DatasetWordPart(FILE_DICT)
     ds.load_data(FILE_TRAIN, FILE_EVAL, FILE_TEST)
+    # ds.crop_data(
+    #     SEQ_LEN * BATCH_SIZE * 100 + BATCH_SIZE,
+    #     len(ds.evalset),
+    #     len(ds.testset),
+    # )
     recalc_batch_params(ds)
 
     train_new_model(ds, generate_wordpart)
