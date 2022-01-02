@@ -267,3 +267,7 @@ class DatasetBPE:
 
     def dict_size(self) -> int:
         return self._tzr.get_vocab_size()
+
+    @property
+    def blank_token(self) -> int:
+        return self._tzr.token_to_id('<bl>')

@@ -44,6 +44,7 @@ WEIGHT_DECAY = 0.02
 REP_COUNT = 5
 REP_INTERVAL = 5
 rng: np.random.Generator = np.random.default_rng()
+blank_token = None
 
 
 def recalc_batch_params(ds: DatasetWordPart):
@@ -378,19 +379,25 @@ def infer_model(ds: Dataset, model_path: str, gen_routine: callable):
 
 
 def main_bpe():
+    infer = True
     ds = DatasetBPE(FILE_DICT)
+    global blank_token
+    blank_token = ds.blank_token
+
+    if infer:
+        file = 'models\\bpe\\run_2022-01-02_14-48-25\\model_200.pt'
+        infer_model(ds, file, generate_wordpart)
+        return
+
     ds.load_data(FILE_DATA)
     # ds.crop_data(
     #     SEQ_LEN * BATCH_SIZE * 100 + BATCH_SIZE,
     #     len(ds.evalset),
     #     len(ds.testset),
     # )
+
     recalc_batch_params(ds)
-
     train_new_model(ds, generate_wordpart)
-
-    # file = 'models\\run_2021-12-18_08-22-15\\model_40.pt'
-    # infer_model(ds, file, generate_wordpart)
 
 
 def main_wordpart():
