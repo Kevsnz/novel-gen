@@ -366,16 +366,20 @@ def train_new_model(ds: Dataset, gen_routine: callable):
 
 
 def infer_model(ds: Dataset, model_path: str, gen_routine: callable):
+    AMOUNT = 2000
+    FILENAME = f'gennnnn.txt'
     model = load_model(model_path)
     gibberish = gen_routine(
         model=model,
-        amount=2000,
+        amount=AMOUNT,
         ds=ds,
-        primer='Зима стояла снежная. Он ехал на машине через лес по заснеженной дороге. В машине было тепло, заряд держался на удивление хорошо. С такой эффективностью можно будет добраться не меньше чем до ближайшего большого города. Там будет и подзарядка, и ночлег, и потрясающий ужин.',
+        # primer='Зима стояла снежная. Он ехал на машине через лес по заснеженной дороге. В машине было тепло, заряд держался на удивление хорошо. С такой эффективностью можно будет добраться не меньше чем до ближайшего большого города. Там будет и подзарядка, и ночлег, и потрясающий ужин.',
+        primer='Быков вошел в рубку и сел в кресло капитана. Михаил Антоновичпосмотре на него грустно. ',
     )
     # print(f'{gibberish}')
-    with open(f'gennnnn.txt', 'w') as f:
+    with open(FILENAME, 'w', encoding='utf8') as f:
         f.write(gibberish)
+    print(f'Generated {AMOUNT} tokens, stored to {FILENAME}')
 
 
 def main_bpe():
