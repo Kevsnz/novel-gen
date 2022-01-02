@@ -6,16 +6,17 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from data import Dataset, DatasetWord, DatasetWordPart
+from data import Dataset, DatasetBPE, DatasetWord, DatasetWordPart
 from model import Transformer
 
 
 # FILE_PATH = os.path.join('.', 'mydata_words')
-FILE_PATH = os.path.join('.', 'data', 'mydata')
+FILE_PATH = os.path.join('..', 'data', 'novels')
+FILE_DATA = os.path.join(FILE_PATH, 'novels.txt')
 FILE_TRAIN = os.path.join(FILE_PATH, 'train.txt')
 FILE_EVAL = os.path.join(FILE_PATH, 'valid.txt')
 FILE_TEST = os.path.join(FILE_PATH, 'test.txt')
-FILE_DICT = os.path.join(FILE_PATH, 'dictionary_500.txt')
+FILE_DICT = os.path.join(FILE_PATH, 'dictionary_byte_10000.json')
 RESULT_DIR = os.path.join('models', 'bpe')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -375,6 +376,22 @@ def infer_model(ds: Dataset, model_path: str, gen_routine: callable):
         f.write(gibberish)
 
 
+def main_bpe():
+    ds = DatasetBPE(FILE_DICT)
+    ds.load_data(FILE_DATA)
+    # ds.crop_data(
+    #     SEQ_LEN * BATCH_SIZE * 100 + BATCH_SIZE,
+    #     len(ds.evalset),
+    #     len(ds.testset),
+    # )
+    recalc_batch_params(ds)
+
+    train_new_model(ds, generate_wordpart)
+
+    # file = 'models\\run_2021-12-18_08-22-15\\model_40.pt'
+    # infer_model(ds, file, generate_wordpart)
+
+
 def main_wordpart():
     ds = DatasetWordPart(FILE_DICT)
     ds.load_data(FILE_TRAIN, FILE_EVAL, FILE_TEST)
@@ -445,6 +462,5 @@ def test():
 
 if __name__ == '__main__':
     print('Welcome!')
-    main_wordpart()
-    #test2()
+    main_bpe()
     print('Done!')
