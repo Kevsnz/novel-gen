@@ -257,7 +257,13 @@ class Transformer(nn.Module):
 
         self.encoder = trans.TransformerEncoder(
             trans.TransformerEncoderLayer(
-                d_embed, heads, nhid, dropout, activation=F.gelu, batch_first=True
+                d_embed,
+                heads,
+                nhid,
+                dropout,
+                activation=F.gelu,
+                batch_first=True,
+                norm_first=True,
             ),
             N,
             norm=nn.LayerNorm(d_embed),
@@ -265,7 +271,19 @@ class Transformer(nn.Module):
 
         # self.embed_tgt = nn.Embedding(trg_vocab, d_embed)
         # self.pe_tgt = PositionalEncoding(d_embed)
-        # self.decoder = Decoder(d_model, N, heads)
+        # self.decoder = trans.TransformerDecoder(
+        #     trans.TransformerDecoderLayer(
+        #         d_embed,
+        #         heads,
+        #         nhid,
+        #         dropout,
+        #         activation=F.gelu,
+        #         batch_first=True,
+        #         norm_first=True,
+        #     ),
+        #     N,
+        #     norm=nn.LayerNorm(d_embed),
+        # )
 
         self.out = nn.Linear(d_embed, trg_vocab)
         self.mask = None
