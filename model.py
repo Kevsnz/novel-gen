@@ -287,6 +287,15 @@ class Transformer(nn.Module):
 
         self.out = nn.Linear(d_embed, trg_vocab)
         self.mask = None
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        r"""Initiate parameters in the transformer model."""
+
+        for p in self.out.parameters():
+            if p.dim() > 1:
+                # init.xavier_uniform_(p)
+                init.kaiming_uniform_(p, mode='fan_out')
 
     def forward(self, src: torch.Tensor, mask: bool = True):
         if mask:
