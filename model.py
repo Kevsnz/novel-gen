@@ -4,28 +4,9 @@ import torch.nn as nn
 import torch.nn.init as init
 import torch.nn.modules.transformer as trans
 import torch.nn.functional as F
-import torch.nn.modules.normalization as norm
-
-# from torch.nn import MultiheadAttention as fdafdafd
 
 
 class PositionalEncoding(nn.Module):
-    r"""Inject some information about the relative or absolute position of the tokens
-        in the sequence. The positional encodings have the same dimension as
-        the embeddings, so that the two can be summed. Here, we use sine and cosine
-        functions of different frequencies.
-    .. math::
-        \text{PosEncoder}(pos, 2i) = sin(pos/10000^(2i/d_model))
-        \text{PosEncoder}(pos, 2i+1) = cos(pos/10000^(2i/d_model))
-        \text{where pos is the word position and i is the embed idx)
-    Args:
-        d_model: the embed dim (required).
-        dropout: the dropout value (default=0.1).
-        max_len: the max. length of the incoming sequence (default=5000).
-    Examples:
-        >>> pos_encoder = PositionalEncoding(d_model)
-    """
-
     def __init__(self, d_model: int, dropout=0.1, max_len: int = 5000):
         super(PositionalEncoding, self).__init__()
         self.ninp = math.sqrt(d_model)
@@ -42,16 +23,6 @@ class PositionalEncoding(nn.Module):
         self.register_buffer('pe', pe)
 
     def forward(self, x: torch.Tensor):
-        r"""Inputs of forward function
-        Args:
-            x: the sequence fed to the positional encoder model (required).
-        Shape:
-            x: [batch size, sequence length, embed dim]
-            output: [batch size, sequence length, embed dim]
-        Examples:
-            >>> output = pos_encoder(x)
-        """
-
         x = x * self.ninp + self.pe[:, : x.size(1)]
         return self.dropout(x)
 
