@@ -294,16 +294,10 @@ def generate_wordpart(model, amount: int, ds: Dataset, primer: str = 'Приве
 
     in_str = primer
     input_data = ds.tokenize(in_str)
-    add_len = 0
-    while len(input_data) < SEQ_LEN:
-        in_str = ' ' + in_str
-        input_data = ds.tokenize(in_str)
-        add_len += 1
-
     out_data = generate_tokens(model, amount, input_data, temp)
 
     out_str = ds.detokenize(out_data)
-    return out_str[add_len:]
+    return out_str
 
 
 def generate_tokens(model, amount: int, input_data: np.ndarray, temp: float):
