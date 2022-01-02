@@ -1,5 +1,6 @@
-import torch
 import numpy as np
+import tokenizers
+from tokenizers.implementations import ByteLevelBPETokenizer
 
 
 class Dataset:
@@ -216,3 +217,50 @@ class DatasetWordPart:
     def detokenize(self, data_tokens: np.ndarray) -> str:
         data = [self._num2txt[t] for t in data_tokens]
         return ''.join(data)
+
+
+class DatasetBPE:
+    _tzr: ByteLevelBPETokenizer
+    data: np.ndarray
+    trainset: np.ndarray
+    evalset: np.ndarray
+    testset: np.ndarray
+
+    def __init__(self, dict_file: str = None) -> None:
+        self._tzr = tokenizers.Tokenizer.from_file(dict_file)
+        print(f'DatasetBPE uses dictionary file \'{dict_file}\'')
+
+    def load_data(self, data_file: str, eval_part: float = 0.2, test_part: float = 0.1):
+        with open(data_file, 'r', encoding='utf8') as fp:
+            self.data = self.tokenize(fp.read())
+
+        l = len(self.data)
+        eval_len = max(2, l * eval_part)
+        test_len = max(2, l * test_part)
+        train_len = l - eval_len - test_len
+        if train_len < 2:
+            raise Exception('Not enough data')
+
+        self.trainset = self.data[:train_len]
+        self.evalset = self.data[train_len : train_len + eval_len]
+        self.testset = self.data[train_len + eval_len :]
+
+        print('Data loaded!')
+        print(
+            f'Token count: train: {len(self.trainset)}, eval: {len(self.evalset)}, test: {len(self.testset)}'
+        )
+
+    def crop_data(self, train_count: int, eval_count: int, test_count: int):
+        self.trainset = self.trainset[0:train_count]
+        self.evalset = self.evalset[0:eval_count]
+        self.testset = self.testset[0:test_count]
+        print(
+            f'Dataset cropped. Train len: {len(self.trainset)}, eval len: {len(self.evalset)}, test len: {len(self.testset)}'
+        )
+
+    def tokenize(self, data: str) -> np.ndarray:
+        encoded = self._tzr.encode(data)
+        return np.array(encoded.ids)
+
+    def detokenize(self, tokens: np.ndarray) -> str:
+        return self._tzr.decode(tokens.tolist())
