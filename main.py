@@ -37,6 +37,7 @@ LR = 0.0005
 LR_TGT = 0.00005
 EPOCH_BATCHES = 1
 LR_DECAY = math.pow(LR_TGT / LR, 1 / EPOCH_LIMIT)  # 0.944
+WEIGHT_DECAY = 0.02
 
 REP_COUNT = 5
 REP_INTERVAL = 5
@@ -195,7 +196,11 @@ def train(
     os.mkdir(dir)
 
     optimizer = torch.optim.AdamW(
-        model.parameters(), lr=LR, betas=(0.9, 0.98), eps=1e-9
+        model.parameters(),
+        lr=LR,
+        betas=(0.9, 0.98),
+        eps=1e-9,
+        weight_decay=WEIGHT_DECAY,
     )
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1.0, gamma=LR_DECAY)
     epoch = 0
