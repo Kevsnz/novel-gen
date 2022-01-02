@@ -274,6 +274,8 @@ class Transformer(nn.Module):
                 self.mask = trans.Transformer.generate_square_subsequent_mask(
                     src.size(1)
                 ).to(src.device)
+        else:
+            self.mask = None
 
         src = self.embed_src(src)
         src = self.pe_src(src)
