@@ -146,12 +146,10 @@ def train_epoch(
     start = tm.perf_counter()
     for i, (scr_batch, tgt_batch) in enumerate(zip(scr_data, tgt_data)):
         pred: torch.Tensor = model(scr_batch)
-        # pred = pred[:, -SEQ_LEN // 2 :, :]
-        pred = pred.reshape(-1, vocab)
 
         optimizer.zero_grad()
 
-        loss = F.cross_entropy(pred, tgt_batch)
+        loss = F.cross_entropy(pred.view(-1, vocab), tgt_batch.view(-1))
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
         optimizer.step()
@@ -173,17 +171,13 @@ def train_epoch(
 def evaluate(model: nn.Module, eval_data: torch.Tensor, vocab: int):
     model.eval()
     eval_inputs, eval_targets = get_train_sample_rnd(eval_data, SEQ_LEN, EVAL_BATCHES)
-    #eval_targets = eval_targets[:, :, -SEQ_LEN // 2 :]
-    eval_targets = eval_targets.reshape(eval_targets.size(0), -1)
 
     total_loss = 0.0
     with torch.no_grad():
         for input_batch, target_batch in zip(eval_inputs, eval_targets):
             output: torch.Tensor = model(input_batch)
-            # output = output[:, -SEQ_LEN // 2 :, :]
-            output = output.reshape(-1, vocab)
 
-            loss = F.cross_entropy(output, target_batch)
+            loss = F.cross_entropy(output.view(-1, vocab), target_batch.view(-1))
             total_loss += loss.item()
 
     return total_loss / len(eval_inputs)
@@ -217,9 +211,6 @@ def train(
             epoch_data, epoch_targets = get_train_sample_seq(
                 train_data, SEQ_LEN, EPOCH_BATCHES
             )
-
-            # epoch_targets = epoch_targets[:, :, -SEQ_LEN // 2 :]
-            epoch_targets = epoch_targets.reshape(epoch_targets.size(0), -1)
 
             loss = train_epoch(
                 model, optimizer, scheduler, epoch_data, epoch_targets, ds.dict_size()
