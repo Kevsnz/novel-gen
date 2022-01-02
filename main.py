@@ -298,7 +298,7 @@ def generate_words(
 
 
 def generate_wordpart(model, amount: int, ds: Dataset, primer: str = 'Привет, '):
-    temp = 0.5
+    temp = 1
     model.eval()
 
     in_str = primer
@@ -332,13 +332,12 @@ def generate_tokens(model, amount: int, input_data: np.ndarray, temp: float):
 def select_tokens_topX_rnd(
     output_data: torch.Tensor, n: int = 2, temp: float = 1.0
 ) -> torch.Tensor:
-    k = output_data.shape[0] - n
     weights = F.softmax(output_data, -1)
     weights = weights.log().div(temp).exp()
-    _, indices = torch.topk(-weights, k, dim=0)
-    weights[indices] = 0
-    idx = torch.multinomial(weights, 1).long()
-    return idx
+
+    _, indices = torch.topk(weights, n, dim=0)
+    idx = torch.multinomial(weights[indices], 1)
+    return indices[idx].long()
 
 
 def select_tokens_temp(output_data: torch.Tensor, temp: float) -> torch.Tensor:
@@ -359,10 +358,9 @@ def train_new_model(ds: Dataset, gen_routine: callable):
     test_batches = split_to_batches(ds.testset, BATCH_SIZE)
 
     model = create_model(vocab, vocab)
-    # model = load_model('models\\bpe\\run_2022-01-02_12-05-30\\model_200.pt')
+    #model = load_model('models\\bpe\\run_2022-01-02_12-05-30\\model_200.pt')
 
     train(model, train_batches, val_batches, ds, gen_routine)
-    # print(generate_char(model, 1000, ds))
 
 
 def infer_model(ds: Dataset, model_path: str, gen_routine: callable):
