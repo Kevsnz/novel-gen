@@ -20,9 +20,9 @@ FILE_DICT = os.path.join(FILE_PATH, 'dictionary_byte_10000.json')
 RESULT_DIR = os.path.join('models', 'bpe')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-SAVE_INTER_MODELS = False
-GEN_INTER_TEXTS = False
-REP_INTER = False
+SAVE_INTER_MODELS = True
+GEN_INTER_TEXTS = True
+REP_INTER = True
 
 SEQ_LEN = 256
 HEADS = 10
@@ -30,15 +30,15 @@ EMBED = HEADS * 6
 ENC_DEC_LAYERS = 12
 N_HID = 1024
 DROPOUT = 0.1
-# SEQ_SHIFT = 1  # max(1,int(SEQ_LEN // 10))
 
 BATCH_SIZE = 32
-EVAL_BATCHES = 32
-EPOCH_LIMIT = 40
-LR = 0.0005
-LR_TGT = 0.00005
 EPOCH_BATCHES = 1
-LR_DECAY = math.pow(LR_TGT / LR, 1 / EPOCH_LIMIT)  # 0.944
+EVAL_BATCHES = 8
+EPOCH_LIMIT = 200
+
+LR = 0.001
+LR_TGT = 0.0001
+LR_DECAY = math.pow(LR_TGT / LR, 1 / (EPOCH_LIMIT - 1))  # 0.944
 WEIGHT_DECAY = 0.02
 
 REP_COUNT = 5
