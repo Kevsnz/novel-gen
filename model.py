@@ -193,7 +193,7 @@ class PositionalEncoding(nn.Module):
         return x'''
 
 
-class Encoder(nn.Module):
+'''class Encoder(nn.Module):
     def __init__(self, d_embed, N, heads, nhid=2048, dropout=0.1):
         super().__init__()
         self.N = N
@@ -218,10 +218,9 @@ class Encoder(nn.Module):
         x = src
         for i in range(self.N):
             x = self.layers[i](x, mask)
-        return self.norm(x)
+        return self.norm(x)'''
 
-
-class Decoder(nn.Module):
+'''class Decoder(nn.Module):
     def __init__(self, d_embed, N, heads, nhid=2048, dropout=0.1):
         super().__init__()
         self.N = N
@@ -245,7 +244,7 @@ class Decoder(nn.Module):
         x = trg
         for i in range(self.N):
             x = self.layers[i](x, e_outputs, src_mask, trg_mask)
-        return self.norm(x)
+        return self.norm(x)'''
 
 
 class Transformer(nn.Module):
