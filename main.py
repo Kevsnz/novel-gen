@@ -16,6 +16,7 @@ FILE_TRAIN = os.path.join(FILE_PATH, 'train.txt')
 FILE_EVAL = os.path.join(FILE_PATH, 'valid.txt')
 FILE_TEST = os.path.join(FILE_PATH, 'test.txt')
 FILE_DICT = os.path.join(FILE_PATH, 'dictionary_500.txt')
+RESULT_DIR = os.path.join('models', 'bpe')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 SAVE_INTER_MODELS = False
@@ -192,8 +193,8 @@ def train(
     gen_routine: callable,
 ):
     dt = datetime.datetime.now()
-    dir = os.path.join('models', f'run_{dt:%Y-%m-%d_%H-%M-%S}')
-    os.mkdir(dir)
+    dir = os.path.join(RESULT_DIR, f'run_{dt:%Y-%m-%d_%H-%M-%S}')
+    os.makedirs(dir)
 
     optimizer = torch.optim.AdamW(
         model.parameters(),
