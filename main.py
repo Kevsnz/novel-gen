@@ -54,7 +54,9 @@ def recalc_batch_params(ds: DatasetWordPart):
 
     REP_INTERVAL = int((EPOCH_BATCHES / REP_COUNT) // 100 * 100)
     if REP_INTERVAL == 0:
-        REP_INTERVAL = int(EPOCH_BATCHES / REP_COUNT)
+        REP_INTERVAL = int((EPOCH_BATCHES / REP_COUNT) // 20 * 20)
+        if REP_INTERVAL == 0:
+            REP_INTERVAL = int(EPOCH_BATCHES / REP_COUNT)
 
 
 def split_to_batches(data: np.ndarray, bs) -> np.ndarray:
