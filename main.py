@@ -227,9 +227,9 @@ def train(
 
             eval_loss = evaluate(model, eval_data, ds.dict_size())
             print(
-                f'Epoch {epoch:3} done: '
+                f'Epoch {epoch:3} done | '
                 f'train loss {loss:8.05f}, '
-                f'eval loss {eval_loss:8.05f}, '
+                f'eval loss {eval_loss:8.05f} | '
                 f'time {tm.monotonic()-st_time:5.1f}, '
                 f'lr: {scheduler.get_last_lr()[0]:9.06f}'
             )
@@ -239,19 +239,27 @@ def train(
 
             if GEN_INTER_TEXTS:
                 gen_text = gen_routine(model, 1000, ds)
-                with open(os.path.join(dir, f'gen_{epoch}.txt'), 'w') as f:
+                with open(
+                    os.path.join(dir, f'gen_{epoch}.txt'), 'w', encoding='utf8'
+                ) as f:
                     f.write(gen_text)
                 print('Generated 1000 symbol text')
 
             scheduler.step()
             epoch += 1
-        print(f'Training done! Epochs: {epoch}, total time: {tm.perf_counter()-start_training: .01f}s')
+        print(
+            f'Training done! Epochs: {epoch}, total time: {tm.perf_counter()-start_training: .01f}s'
+        )
         gen_text = gen_routine(model, 1000, ds)
-        with open(os.path.join(dir, f'gen_{epoch}_final.txt'), 'w') as f:
+        with open(
+            os.path.join(dir, f'gen_{epoch}_final.txt'), 'w', encoding='utf8'
+        ) as f:
             f.write(gen_text)
         print('Generated 1000 token text')
     except KeyboardInterrupt:
-        print(f'Training interrupted! Epoch: {epoch}, total time: {tm.perf_counter()-start_training: .01f}s')
+        print(
+            f'Training interrupted! Epoch: {epoch}, total time: {tm.perf_counter()-start_training: .01f}s'
+        )
     finally:
         save_model(model, epoch, dir)
 
