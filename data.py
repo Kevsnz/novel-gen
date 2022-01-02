@@ -264,3 +264,6 @@ class DatasetBPE:
 
     def detokenize(self, tokens: np.ndarray) -> str:
         return self._tzr.decode(tokens.tolist())
+
+    def dict_size(self) -> int:
+        return self._tzr.get_vocab_size()
