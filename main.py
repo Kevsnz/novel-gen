@@ -217,7 +217,7 @@ def train(
         for epoch in range(EPOCH_LIMIT):
             st_time = tm.monotonic()
 
-            epoch_data, epoch_targets = get_train_sample_seq(
+            epoch_data, epoch_targets = get_train_sample_rnd(
                 train_data, SEQ_LEN, EPOCH_BATCHES
             )
 
