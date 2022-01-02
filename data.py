@@ -235,8 +235,8 @@ class DatasetBPE:
             self.data = self.tokenize(fp.read())
 
         l = len(self.data)
-        eval_len = max(2, l * eval_part)
-        test_len = max(2, l * test_part)
+        eval_len = max(2, int(round(l * eval_part)))
+        test_len = max(2, int(round(l * test_part)))
         train_len = l - eval_len - test_len
         if train_len < 2:
             raise Exception('Not enough data')
