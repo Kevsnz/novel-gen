@@ -105,6 +105,23 @@ def get_train_sample_rnd(
     return data.to(device), target.to(device)
 
 
+def get_train_sample_rnd_no_shift(
+    batches: np.ndarray, seq_len: int, count: int
+) -> tuple[torch.Tensor, torch.Tensor]:
+    idx_start_range = batches.shape[1] - seq_len - 2
+    idx_array: np.ndarray = rng.random(count) * idx_start_range
+    idx_array = np.around(idx_array, 0).astype(int)
+    idx_array_seq = np.linspace(
+        idx_array, idx_array + seq_len - 1, seq_len, dtype=int, axis=-1
+    )
+    data: np.ndarray = np.take(batches, idx_array_seq, axis=1)
+    target = torch.tensor(data, dtype=torch.long).transpose(1, 0).contiguous()
+
+    data[-1, :] = blank_token
+    data = torch.tensor(data).transpose(1, 0).contiguous()
+    return data.to(device), target.to(device)
+
+
 def create_model(src_vocab, trg_vocab):
     model = Transformer(
         src_vocab,
