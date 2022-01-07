@@ -260,47 +260,16 @@ def train(
             f'Training interrupted! Epoch: {epoch}, total time: {tm.perf_counter()-start_training: .01f}s'
         )
     finally:
-
-
-def generate_char(model, amount: int, ds: Dataset, primer: str = 'Привет, '):
-    temp = 0.25
-    model.eval()
-
-    in_str = primer
-    add_len = SEQ_LEN - len(in_str)
-    in_str = in_str.rjust(SEQ_LEN, ' ')
-    input_data = ds.tokenize(in_str)
-
-    out_data = generate_tokens(model, amount, input_data, temp)
-
-    out_str = ds.detokenize(out_data)
-    return out_str[add_len:]
         model.save_model(epoch, dir)
 
 
-def generate_words(
-    model, amount: int, ds: Dataset, primer: str = 'привет , как дела ? '
+def generate_text(
+    model: Transformer, amount: int, ds: Dataset, primer: str = 'Привет, '
 ):
     temp = 0.25
     model.eval()
 
-    in_str = primer
-    input_data = ds.tokenize(in_str)
-    add_len = SEQ_LEN - len(input_data)
-    input_data = np.concatenate((input_data, np.zeros(add_len)), axis=0)
-
-    out_data = generate_tokens(model, amount, input_data, temp)
-
-    out_str = ds.detokenize(out_data[add_len:])
-    return out_str
-
-
-def generate_wordpart(model, amount: int, ds: Dataset, primer: str = 'Привет, '):
-    temp = 1
-    model.eval()
-
-    in_str = primer
-    input_data = ds.tokenize(in_str)
+    input_data = ds.tokenize(primer)
     out_data = generate_tokens(model, amount, input_data, temp)
 
     out_str = ds.detokenize(out_data)
@@ -376,14 +345,14 @@ def infer_model(ds: Dataset, model_path: str, gen_routine: callable):
 
 
 def main_bpe():
-    infer = True
+    infer = False
     ds = DatasetBPE(FILE_DICT)
     global blank_token
     blank_token = ds.blank_token
 
     if infer:
         file = 'models\\bpe\\run_2022-01-02_14-48-25\\model_200.pt'
-        infer_model(ds, file, generate_wordpart)
+        infer_model(ds, file, generate_text)
         return
 
     ds.load_data(FILE_DATA)
@@ -394,7 +363,7 @@ def main_bpe():
     # )
 
     recalc_batch_params(ds)
-    train_new_model(ds, generate_wordpart)
+    train_new_model(ds, generate_text)
 
 
 def main_wordpart():
@@ -407,7 +376,7 @@ def main_wordpart():
     # )
     recalc_batch_params(ds)
 
-    train_new_model(ds, generate_wordpart)
+    train_new_model(ds, generate_text)
 
     # file = 'models\\run_2021-12-18_08-22-15\\model_40.pt'
     # infer_model(ds, file, generate_wordpart)
@@ -418,7 +387,7 @@ def main_char():
     ds.load_data(FILE_TRAIN, FILE_EVAL, FILE_TEST)
     recalc_batch_params(ds)
 
-    train_new_model(ds, generate_char)
+    train_new_model(ds, generate_text)
 
     # model = load_model('models\\run_2021-11-30_18-15-21\\model_25.pt')
     # gibberish = generate(model, 20000, ds, 'Зима стояла снежная. Он ехал на машине через лес по заснеженной дороге. В машине было тепло, заряд держался на удивление хорошо. С такой эффективностью можно будет добраться не меньше чем до ближайшего большого города. Там будет и подзарядка, и ночлег, и потрясающий ужин.')
@@ -434,7 +403,7 @@ def main_word():
 
     # ds.clear_data()
 
-    train_new_model(ds, generate_words)
+    train_new_model(ds, generate_text)
 
 
 def test():
