@@ -1,9 +1,25 @@
+from typing import Protocol
 import numpy as np
 import tokenizers
 from tokenizers.implementations import ByteLevelBPETokenizer
 
 
-class Dataset:
+class Dataset(Protocol):
+    trainset: np.ndarray
+    evalset: np.ndarray
+    testset: np.ndarray
+
+    def dict_size(self) -> int:
+        ...
+
+    def tokenize(self, data: str) -> np.ndarray:
+        ...
+
+    def detokenize(self, data: np.ndarray) -> str:
+        ...
+
+
+class DatasetChar:
     def __init__(self) -> None:
         self.trainset: np.ndarray = None
         self.evalset: np.ndarray = None
@@ -230,9 +246,18 @@ class DatasetBPE:
         self._tzr = tokenizers.Tokenizer.from_file(dict_file)
         print(f'DatasetBPE uses dictionary file \'{dict_file}\'')
 
-    def load_data(self, data_file: str, eval_part: float = 0.2, test_part: float = 0.1):
+    def load_data(
+        self,
+        data_file: str,
+        eval_part: float = 0.2,
+        test_part: float = 0.1,
+        token_limit=None,
+    ):
         with open(data_file, 'r', encoding='utf8') as fp:
-            self.data = self.tokenize(fp.read())
+            data = fp.read()
+        self.data = self.tokenize(data)
+        if token_limit is not None:
+            self.data = self.data[:token_limit]
 
         l = len(self.data)
         eval_len = max(2, int(round(l * eval_part)))

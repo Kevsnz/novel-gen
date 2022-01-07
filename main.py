@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from data import Dataset, DatasetBPE, DatasetWord, DatasetWordPart
+from data import Dataset, DatasetChar, DatasetBPE, DatasetWord, DatasetWordPart
 from model import Transformer
 
 
@@ -436,7 +436,7 @@ def main_wordpart():
 
 
 def main_char():
-    ds = Dataset()
+    ds = DatasetChar()
     ds.load_data(FILE_TRAIN, FILE_EVAL, FILE_TEST)
     recalc_batch_params(ds)
 
