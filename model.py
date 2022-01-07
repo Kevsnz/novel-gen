@@ -1,4 +1,5 @@
 import math
+import os
 import torch
 import torch.nn as nn
 import torch.nn.init as init
@@ -282,3 +283,15 @@ class Transformer(nn.Module):
         e_outputs = self.encoder(src, self.mask)
         output = self.out(e_outputs)
         return output
+
+    def load_model(filename: str, device: str):
+        with open(filename, 'rb') as f:
+            model = torch.load(f).to(device)
+        print(f'Model loaded from {filename}')
+        return model
+
+    def save_model(self, epoch: int, dir: str):
+        filename = f'model_{epoch}.pt'
+        with open(os.path.join(dir, filename), 'wb') as f:
+            torch.save(self, f)
+            print(f'Model state saved to {filename}')

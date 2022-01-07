@@ -140,20 +140,6 @@ def create_model(src_vocab, trg_vocab):
     return model.to(device)
 
 
-def load_model(filename: str):
-    with open(filename, 'rb') as f:
-        model = torch.load(f).to(device)
-    print(f'Model loaded from {filename}')
-    return model
-
-
-def save_model(model: nn.Module, epoch: int, dir: str):
-    filename = f'model_{epoch}.pt'
-    with open(os.path.join(dir, filename), 'wb') as f:
-        torch.save(model, f)
-        print(f'Model state saved to {filename}')
-
-
 def train_epoch(
     model: nn.Module,
     optimizer: torch.optim.Adam,
@@ -253,7 +239,7 @@ def train(
             )
 
             if SAVE_INTER_MODELS:
-                save_model(model, epoch, dir)
+                model.save_model(epoch, dir)
 
             if GEN_INTER_TEXTS:
                 gen_text = gen_routine(model, 1000, ds)
@@ -279,7 +265,6 @@ def train(
             f'Training interrupted! Epoch: {epoch}, total time: {tm.perf_counter()-start_training: .01f}s'
         )
     finally:
-        save_model(model, epoch, dir)
 
 
 def generate_char(model, amount: int, ds: Dataset, primer: str = 'Привет, '):
@@ -295,6 +280,7 @@ def generate_char(model, amount: int, ds: Dataset, primer: str = 'Привет, 
 
     out_str = ds.detokenize(out_data)
     return out_str[add_len:]
+        model.save_model(epoch, dir)
 
 
 def generate_words(
@@ -383,13 +369,13 @@ def train_new_model(ds: Dataset, gen_routine: callable):
 def infer_model(ds: Dataset, model_path: str, gen_routine: callable):
     AMOUNT = 2000
     FILENAME = f'gennnnn.txt'
-    model = load_model(model_path)
+    model = Transformer.load_model(model_path, device)
     gibberish = gen_routine(
         model=model,
         amount=AMOUNT,
         ds=ds,
         # primer='Зима стояла снежная. Он ехал на машине через лес по заснеженной дороге. В машине было тепло, заряд держался на удивление хорошо. С такой эффективностью можно будет добраться не меньше чем до ближайшего большого города. Там будет и подзарядка, и ночлег, и потрясающий ужин.',
-        primer='Быков вошел в рубку и сел в кресло капитана. Михаил Антоновичпосмотре на него грустно. ',
+        primer='Быков вошел в рубку и сел в кресло капитана. Михаил Антонович посмотрел на него грустно. ',
     )
     # print(f'{gibberish}')
     with open(FILENAME, 'w', encoding='utf8') as f:
