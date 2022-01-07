@@ -307,24 +307,22 @@ def generate_wordpart(model, amount: int, ds: Dataset, primer: str = 'Приве
     return out_str
 
 
-def generate_tokens(model, amount: int, input_data: np.ndarray, temp: float):
-    out_data = torch.tensor(input_data)
-    input_data = torch.tensor(input_data, dtype=torch.long).unsqueeze(0).to(device)
+def generate_tokens(
+    model: Transformer, amount: int, input_data: np.ndarray, temp: float
+):
+    # blank = torch.tensor([blank_token], dtype=torch.long).to(device)
+    out_data = torch.tensor(input_data, dtype=torch.long).to(device)
+    # input_data = torch.tensor(input_data, dtype=torch.long)
+    # input_data = torch.cat([input_data, blank]).unsqueeze(0).to(device)
+    # input_data = input_data.unsqueeze(0).to(device)
 
     with torch.no_grad():
         for _ in range(max(1, amount)):
-            output_data = model(input_data, mask=False)
-            output_data = output_data.squeeze(0)[-1]  # take last token
+            output_data = model(out_data[-SEQ_LEN:].unsqueeze(0), mask=False).squeeze()
+            next_tokens = select_tokens_topX_rnd(output_data[-1], 500, temp)
+            out_data = torch.cat([out_data, next_tokens])
 
-            # next_tokens = select_tokens_greedy(output_data)
-            # next_tokens = select_tokens_temp(output_data, temp)
-            next_tokens = select_tokens_topX_rnd(output_data, 500, temp)
-
-            out_data = torch.cat([out_data, next_tokens.cpu()], 0)
-            input_data = torch.cat([input_data, next_tokens.unsqueeze(0)], 1)
-            input_data = input_data[:, -SEQ_LEN:]
-
-    return out_data.int().numpy()
+    return out_data.int().cpu().numpy()
 
 
 def select_tokens_topX_rnd(
