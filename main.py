@@ -277,20 +277,16 @@ def generate_text(
     return out_str
 
 
+@torch.no_grad()
 def generate_tokens(
     model: Transformer, amount: int, input_data: np.ndarray, temp: float
 ):
-    # blank = torch.tensor([blank_token], dtype=torch.long).to(device)
     out_data = torch.tensor(input_data, dtype=torch.long).to(device)
-    # input_data = torch.tensor(input_data, dtype=torch.long)
-    # input_data = torch.cat([input_data, blank]).unsqueeze(0).to(device)
-    # input_data = input_data.unsqueeze(0).to(device)
 
-    with torch.no_grad():
-        for _ in range(max(1, amount)):
-            output_data = model(out_data[-SEQ_LEN:].unsqueeze(0), mask=False).squeeze()
-            next_tokens = select_tokens_topX_rnd(output_data[-1], 500, temp)
-            out_data = torch.cat([out_data, next_tokens])
+    for _ in range(max(1, amount)):
+        output_data = model(out_data[-SEQ_LEN:].unsqueeze(0), mask=True).squeeze()
+        next_tokens = select_tokens_topX_rnd(output_data[-1], 500, temp)
+        out_data = torch.cat([out_data, next_tokens])
 
     return out_data.int().cpu().numpy()
 
