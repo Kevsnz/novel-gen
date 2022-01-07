@@ -136,7 +136,7 @@ def create_model(src_vocab):
 
 
 def train_epoch(
-    model: nn.Module,
+    model: Transformer,
     optimizer: torch.optim.Adam,
     scheduler: torch.optim.lr_scheduler.StepLR,
     scr_data: torch.Tensor,
@@ -172,7 +172,7 @@ def train_epoch(
     return total_loss / len(scr_data)
 
 
-def evaluate(model: nn.Module, eval_data: torch.Tensor, vocab: int):
+def evaluate(model: Transformer, eval_data: torch.Tensor, vocab: int):
     model.eval()
     eval_inputs, eval_targets = get_train_sample_rnd(eval_data, SEQ_LEN, EVAL_BATCHES)
 
@@ -188,7 +188,7 @@ def evaluate(model: nn.Module, eval_data: torch.Tensor, vocab: int):
 
 
 def train(
-    model: nn.Module,
+    model: Transformer,
     train_data: torch.Tensor,
     eval_data: torch.Tensor,
     ds: Dataset,
@@ -355,7 +355,7 @@ def main_bpe():
         infer_model(ds, file, generate_text)
         return
 
-    ds.load_data(FILE_DATA)
+    ds.load_data(FILE_DATA)  # , token_limit=SEQ_LEN * BATCH_SIZE * 200 + BATCH_SIZE)
     # ds.crop_data(
     #     SEQ_LEN * BATCH_SIZE * 100 + BATCH_SIZE,
     #     len(ds.evalset),
