@@ -76,16 +76,12 @@ def get_train_sample_seq(
         idx_array, idx_array + seq_len - 1, seq_len, dtype=int, axis=-1
     )
 
-    # for idx_arr in idx_array_seq:
-    #     for i1, i2 in zip(idx_arr[:-1], idx_arr[1:]):
-    #         assert i2 == i1+1
-
-    data: np.ndarray = np.take(batches, idx_array_seq, axis=1)
-    target: np.ndarray = np.take(batches, idx_array_seq + 1, axis=1)
+    data = np.take(batches, idx_array_seq, axis=1)
+    target = np.take(batches, idx_array_seq + 1, axis=1)
 
     data = torch.tensor(data).transpose(1, 0).contiguous()
     target = torch.tensor(target, dtype=torch.long).transpose(1, 0).contiguous()
-    return data.to(device), target.to(device)
+    return data.requires_grad_(False), target.requires_grad_(False)
 
 
 def get_train_sample_rnd(
@@ -97,12 +93,12 @@ def get_train_sample_rnd(
     idx_array_seq = np.linspace(
         idx_array, idx_array + seq_len - 1, seq_len, dtype=int, axis=-1
     )
-    data: np.ndarray = np.take(batches, idx_array_seq, axis=1)
-    target: np.ndarray = np.take(batches, idx_array_seq + 1, axis=1)
+    data = np.take(batches, idx_array_seq, axis=1)
+    target = np.take(batches, idx_array_seq + 1, axis=1)
 
     data = torch.tensor(data).transpose(1, 0).contiguous()
     target = torch.tensor(target, dtype=torch.long).transpose(1, 0).contiguous()
-    return data.to(device), target.to(device)
+    return data.requires_grad_(False), target.requires_grad_(False)
 
 
 def get_train_sample_rnd_no_shift(
@@ -114,12 +110,12 @@ def get_train_sample_rnd_no_shift(
     idx_array_seq = np.linspace(
         idx_array, idx_array + seq_len - 1, seq_len, dtype=int, axis=-1
     )
-    data: np.ndarray = np.take(batches, idx_array_seq, axis=1)
+    data = np.take(batches, idx_array_seq, axis=1)
     target = torch.tensor(data, dtype=torch.long).transpose(1, 0).contiguous()
 
     data[-1, :] = blank_token
     data = torch.tensor(data).transpose(1, 0).contiguous()
-    return data.to(device), target.to(device)
+    return data.requires_grad_(False), target.requires_grad_(False)
 
 
 def create_model(src_vocab):
@@ -150,11 +146,11 @@ def train_epoch(
 
     start = tm.perf_counter()
     for i, (scr_batch, tgt_batch) in enumerate(zip(scr_data, tgt_data)):
-        pred: torch.Tensor = model(scr_batch)
+        pred: torch.Tensor = model(scr_batch.to(device))
 
         optimizer.zero_grad()
 
-        loss = F.cross_entropy(pred.view(-1, vocab), tgt_batch.view(-1))
+        loss = F.cross_entropy(pred.view(-1, vocab), tgt_batch.view(-1).to(device))
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
         optimizer.step()
@@ -180,9 +176,11 @@ def evaluate(model: Transformer, eval_data: torch.Tensor, vocab: int):
     total_loss = 0.0
     with torch.no_grad():
         for input_batch, target_batch in zip(eval_inputs, eval_targets):
-            output: torch.Tensor = model(input_batch)
+            output: torch.Tensor = model(input_batch.to(device))
 
-            loss = F.cross_entropy(output.view(-1, vocab), target_batch.view(-1))
+            loss = F.cross_entropy(
+                output.view(-1, vocab), target_batch.view(-1).to(device)
+            )
             total_loss += loss.item()
 
     return total_loss / len(eval_inputs)
