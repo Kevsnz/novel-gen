@@ -122,20 +122,15 @@ def get_train_sample_rnd_no_shift(
     return data.to(device), target.to(device)
 
 
-def create_model(src_vocab, trg_vocab):
+def create_model(src_vocab):
     model = Transformer(
         src_vocab,
-        trg_vocab,
         d_embed=EMBED,
         N=ENC_DEC_LAYERS,
         heads=HEADS,
         nhid=N_HID,
         dropout=DROPOUT,
     )
-    # for p in model.parameters():
-    #     if p.dim() > 1:
-    #         #nn.init.xavier_uniform_(p)
-    #         nn.init.kaiming_normal_(p)
     print('New model created')
     return model.to(device)
 
@@ -355,13 +350,12 @@ def select_tokens_greedy(output_data: torch.Tensor) -> torch.Tensor:
 
 
 def train_new_model(ds: Dataset, gen_routine: callable):
-    vocab = ds.dict_size()
     train_batches = split_to_batches(ds.trainset, BATCH_SIZE)
     val_batches = split_to_batches(ds.evalset, BATCH_SIZE)
     test_batches = split_to_batches(ds.testset, BATCH_SIZE)
 
-    model = create_model(vocab, vocab)
-    #model = load_model('models\\bpe\\run_2022-01-02_12-05-30\\model_200.pt')
+    model = create_model(ds.dict_size())
+    # model = load_model('models\\bpe\\run_2022-01-02_12-05-30\\model_200.pt')
 
     train(model, train_batches, val_batches, ds, gen_routine)
 

@@ -221,7 +221,7 @@ class PositionalEncoding(nn.Module):
 
 
 class Transformer(nn.Module):
-    def __init__(self, src_vocab, trg_vocab, d_embed, N, heads, nhid=2048, dropout=0.1):
+    def __init__(self, src_vocab, d_embed, N, heads, nhid=2048, dropout=0.1):
         super().__init__()
         self.embed_src = nn.Embedding(src_vocab, d_embed)
         self.pe_src = PositionalEncoding(d_embed)
@@ -241,23 +241,7 @@ class Transformer(nn.Module):
             norm=nn.LayerNorm(d_embed),
         )
 
-        # self.embed_tgt = nn.Embedding(trg_vocab, d_embed)
-        # self.pe_tgt = PositionalEncoding(d_embed)
-        # self.decoder = trans.TransformerDecoder(
-        #     trans.TransformerDecoderLayer(
-        #         d_embed,
-        #         heads,
-        #         nhid,
-        #         dropout,
-        #         activation=F.gelu,
-        #         batch_first=True,
-        #         norm_first=True,
-        #     ),
-        #     N,
-        #     norm=nn.LayerNorm(d_embed),
-        # )
-
-        self.out = nn.Linear(d_embed, trg_vocab)
+        self.out = nn.Linear(d_embed, src_vocab)
         self.mask = None
         self.reset_parameters()
 
