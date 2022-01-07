@@ -221,10 +221,19 @@ class PositionalEncoding(nn.Module):
 
 
 class Transformer(nn.Module):
-    def __init__(self, src_vocab, d_embed, N, heads, nhid=2048, dropout=0.1):
+    def __init__(
+        self,
+        src_vocab,
+        d_embed,
+        N,
+        heads,
+        nhid=2048,
+        dropout=0.1,
+        max_sequence: int = 512,
+    ):
         super().__init__()
         self.embed_src = nn.Embedding(src_vocab, d_embed)
-        self.pe_src = PositionalEncoding(d_embed)
+        self.pe_src = nn.Embedding(max_sequence, d_embed)
         # self.encoder = Encoder(d_embed, N, heads, nhid, dropout)
 
         self.encoder = trans.TransformerEncoder(
@@ -243,7 +252,8 @@ class Transformer(nn.Module):
 
         self.out = nn.Linear(d_embed, src_vocab)
         self.mask = None
-        self.reset_parameters()
+        self.positions = None
+        # self.reset_parameters()
 
     def reset_parameters(self):
         r"""Initiate parameters in the transformer model."""
@@ -262,8 +272,13 @@ class Transformer(nn.Module):
         else:
             self.mask = None
 
+        if self.positions is None or self.positions.size(1) < src.size(1):
+            self.positions = (
+                torch.arange(src.size(1), dtype=torch.long).unsqueeze(0).to(src.device)
+            )
+
         src = self.embed_src(src)
-        src = self.pe_src(src)
+        src = src + self.pe_src(self.positions)[:, : src.size(1), :]
         e_outputs = self.encoder(src, self.mask)
         output = self.out(e_outputs)
         return output

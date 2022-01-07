@@ -17,7 +17,7 @@ FILE_TRAIN = os.path.join(FILE_PATH, 'train.txt')
 FILE_EVAL = os.path.join(FILE_PATH, 'valid.txt')
 FILE_TEST = os.path.join(FILE_PATH, 'test.txt')
 FILE_DICT = os.path.join(FILE_PATH, 'dictionary_byte_10000.json')
-RESULT_DIR = os.path.join('models', 'bpe')
+RESULT_DIR = os.path.join('models', 'bpe_lpe')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 SAVE_INTER_MODELS = True
@@ -130,6 +130,7 @@ def create_model(src_vocab):
         heads=HEADS,
         nhid=N_HID,
         dropout=DROPOUT,
+        max_sequence=SEQ_LEN,
     )
     print('New model created')
     return model.to(device)
