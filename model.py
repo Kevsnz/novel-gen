@@ -283,7 +283,7 @@ class Transformer(nn.Module):
         output = self.out(e_outputs)
         return output
 
-    def load_model(filename: str, device: str):
+    def load_model(filename: str, device: str) -> nn.Module:
         with open(filename, 'rb') as f:
             model = torch.load(f).to(device)
         print(f'Model loaded from {filename}')
@@ -294,3 +294,14 @@ class Transformer(nn.Module):
         with open(os.path.join(dir, filename), 'wb') as f:
             torch.save(self, f)
             print(f'Model state saved to {filename}')
+
+    def count_parameters(self) -> tuple[dict[str,int], int]:
+        table = {}
+        total_params = 0
+        for name, parameter in self.named_parameters():
+            if not parameter.requires_grad:
+                continue
+            param = parameter.numel()
+            table[name] = param
+            total_params += param
+        return table, total_params
