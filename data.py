@@ -246,6 +246,24 @@ class DatasetBPE:
         self._tzr = tokenizers.Tokenizer.from_file(dict_file)
         print(f'DatasetBPE uses dictionary file \'{dict_file}\'')
 
+    def load_data2(self, train_file: str, eval_file: str, token_limit: int = None):
+        with open(train_file, 'r', encoding='utf8') as fp:
+            data = fp.read()
+        self.trainset = self.tokenize(data)
+        if token_limit is not None:
+            self.trainset = self.trainset[:token_limit]
+
+        with open(eval_file, 'r', encoding='utf8') as fp:
+            data = fp.read()
+        self.evalset = self.tokenize(data)
+
+        self.testset = []
+
+        print('Data loaded!')
+        print(
+            f'Token count: train: {len(self.trainset)}, eval: {len(self.evalset)}, test: {len(self.testset)}'
+        )
+
     def load_data(
         self,
         data_file: str,
